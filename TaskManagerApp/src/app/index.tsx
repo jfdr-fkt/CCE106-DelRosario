@@ -14,9 +14,7 @@ export default function App() {
   const [isTitleFocused, setIsTitleFocused] = useState<boolean>(false);
   const [isDateFocused, setIsDateFocused] = useState<boolean>(false);
 
-  const [tasks, setTasks] = useState<Task[]>([
-    
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const addTask = () => {
     if (taskTitle.trim() === '' || dueDate.trim() === '') {
@@ -50,12 +48,14 @@ export default function App() {
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       
+      {/* Student Header Card */}
       <View style={styles.headerCard}>
         <Text style={styles.title}>Student Task Manager Screen</Text>
         <Text style={styles.studentName}>Jonathan F Del Rosario</Text>
         <Text style={styles.studentCourse}>DCE-BSIT</Text>
       </View>
 
+      {/* Stats Section */}
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, styles.statCardPending]}>
           <View style={styles.badgePending}>
@@ -78,6 +78,7 @@ export default function App() {
         </View>
       </View>
 
+      {/* Input Form Card */}
       <View style={styles.formCard}>
         <Text style={styles.sectionTitle}>Add New Task</Text>
 
@@ -95,6 +96,13 @@ export default function App() {
         <Text style={styles.inputLabel}>Due Date & Time</Text>
         {Platform.OS === 'web' ? (
           <React.Fragment>
+            {React.createElement('style', null, `
+              input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+                transform: scale(1.35);
+                cursor: pointer;
+                padding-right: 4px;
+              }
+            `)}
             {React.createElement('input', {
               type: 'datetime-local',
               value: dueDate,
@@ -102,15 +110,16 @@ export default function App() {
               style: {
                 backgroundColor: '#F1F5F9',
                 borderRadius: '10px',
-                padding: '12px',
-                fontSize: '15px',
+                padding: '14px 16px',
+                fontSize: '16px',
                 color: dueDate ? '#0F172A' : '#9CA3AF',
                 marginBottom: '14px',
                 border: '1px solid #E2E8F0',
                 outline: 'none',
                 width: '100%',
-                fontFamily: 'inherit',
-                boxSizing: 'border-box'
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                boxSizing: 'border-box',
+                cursor: 'pointer',
               }
             })}
           </React.Fragment>
@@ -131,6 +140,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
+      {/* Task List */}
       <Text style={styles.sectionTitle}>My Task List ({tasks.length})</Text>
       
       {tasks.length === 0 ? (
@@ -140,8 +150,9 @@ export default function App() {
       ) : (
         tasks.map((task) => (
           <View key={task.id} style={[styles.taskCard, task.completed && styles.taskCardDone]}>
+            {/* Dimming is applied strictly to this left section when completed */}
             <TouchableOpacity 
-              style={styles.taskCheckbox} 
+              style={[styles.taskCheckbox, task.completed && styles.taskContentDone]} 
               onPress={() => toggleTask(task.id)}
               activeOpacity={0.7}
             >
@@ -157,12 +168,13 @@ export default function App() {
               </View>
             </TouchableOpacity>
 
+            {/* Unaffected, full-bright Delete Button */}
             <TouchableOpacity 
               style={styles.deleteBtn} 
               onPress={() => deleteTask(task.id)}
               activeOpacity={0.7}
             >
-              <Text style={styles.deleteBtnText}>🗑️</Text>
+              <Text style={styles.deleteBtnText}>Delete</Text>
             </TouchableOpacity>
           </View>
         ))
@@ -282,7 +294,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#F1F5F9',
     borderRadius: 10,
-    padding: 12,
+    padding: 14,
     fontSize: 15,
     color: '#0F172A',
     marginBottom: 14,
@@ -315,6 +327,8 @@ const styles = StyleSheet.create({
   taskCardDone: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
+  },
+  taskContentDone: {
     opacity: 0.5,
   },
   taskCheckbox: {
@@ -358,10 +372,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   deleteBtn: {
-    padding: 8,
+    backgroundColor: '#EF4444',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
   },
   deleteBtnText: {
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   emptyState: {
     padding: 20,
