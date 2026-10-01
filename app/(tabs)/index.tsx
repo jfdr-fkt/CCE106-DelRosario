@@ -1,4 +1,4 @@
-﻿import { Redirect } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function HomeScreen() {

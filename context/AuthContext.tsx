@@ -1,4 +1,4 @@
-﻿import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { API_BASE_URL } from '@/constants/api';
 
