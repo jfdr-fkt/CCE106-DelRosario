@@ -29,7 +29,7 @@ Date:
 
 ### API
 
-Base URL: `REPLACE_WITH_EXAM_API` (set in `constants/api.ts`)
+Base URL: `https://jsonplaceholder.typicode.com` (set in `constants/api.ts`)
 
 You can also set `EXPO_PUBLIC_API_URL` in a local `.env.local` file and restart Expo.
 
@@ -43,8 +43,12 @@ GET /profile
 
 Use the instructor's API documentation for payloads and response fields.
 
-The instructor's URL and documentation have not been provided yet. The current
-code expects these response shapes, which must be checked against that documentation:
+The instructor's latest update supplies JSONPlaceholder as the base URL. Its
+[documented resources](https://jsonplaceholder.typicode.com/) include `/users`,
+but not `/login`, `/students`, or `/profile`. Checks of the exam's student and
+profile endpoints return HTTP 404. JSONPlaceholder does not issue login tokens.
+The instructor still needs to clarify how authentication and student endpoints
+should work with this service. The current code expects these response shapes:
 
 - `POST /login`: send `{ "email": "...", "password": "..." }`; receive
   `{ "token": "...", "user": { "id": 1, "name": "...", "email": "...", "role": "..." } }`.
@@ -70,8 +74,9 @@ list supports searching by name, and View Details opens the selected student's
 dynamic route. API screens show loading, error, and empty states, with a retry
 button for errors. Logout returns to Sign In.
 
-The remaining `TODO EXAM` comments identify the missing instructor API URL and
-response-field confirmation. Set the URL in `constants/api.ts` before logging in.
+The remaining `TODO EXAM` comments identify response-field confirmation. The
+base URL is now set, but login and student loading still need the instructor's
+endpoint and authentication guidance.
 
 Expo SecureStore is used only in `context/AuthContext.tsx`. The app checks
 availability before saving, reading, or deleting a token. Android/iOS sessions
