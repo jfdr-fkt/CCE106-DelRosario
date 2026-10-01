@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- Setters and imports are reserved for exam TODOs. */
-import { createContext, useEffect, useState, type ReactNode } from 'react';
+﻿import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { API_BASE_URL } from '@/constants/api';
 
 export type User = {
   id?: string | number;
@@ -13,6 +13,7 @@ type AuthContextValue = {
   token: string | null;
   user: User | null;
   authLoading: boolean;
+  sessionError: string;
   login: (accessToken: string, userData: User) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
@@ -23,38 +24,85 @@ export const AuthContext = createContext<AuthContextValue | undefined>(undefined
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  // False keeps the unfinished starter usable; no session has been restored yet.
-  const [authLoading, setAuthLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [sessionError, setSessionError] = useState('');
 
   const login = async (accessToken: string, userData: User) => {
-    // TODO EXAM: Save the access token with SecureStore.setItemAsync().
-    // TODO EXAM: Update token state and user state with the supplied arguments.
-    // TODO EXAM: Handle storage failures; never store the password.
+    setSessionError('');
+
+    try {
+      if (await SecureStore.isAvailableAsync()) {
+        await SecureStore.setItemAsync('token', accessToken);
+      }
+      setToken(accessToken);
+      setUser(userData);
+    } catch {
+      throw new Error('Unable to save your session. Please try again.');
+    }
   };
 
-  const logout = async () => {
-    // TODO EXAM: Delete the saved token using SecureStore.deleteItemAsync().
-    // TODO EXAM: Clear token state and user state.
-    // TODO EXAM: Handle storage errors and redirect to /sign-in after logout.
-  };
+  const logout = useCallback(async () => {
+    setSessionError('');
 
-  const restoreSession = async () => {
-    // TODO EXAM: Set authLoading while restoring the session.
-    // TODO EXAM: Read the saved token with SecureStore.getItemAsync().
-    // TODO EXAM: Validate the token via GET /profile with a Bearer token.
-    // TODO EXAM: Update token and user state for a valid session.
-    // TODO EXAM: Handle 401 Unauthorized / expired sessions and clear invalid credentials.
-    // TODO EXAM: Handle errors and stop authLoading in finally.
-  };
-
-  useEffect(() => {
-    // TODO EXAM: Call restoreSession() on startup.
+    try {
+      if (await SecureStore.isAvailableAsync()) {
+        await SecureStore.deleteItemAsync('token');
+      }
+    } catch {
+      setSessionError('Signed out, but the saved session could not be removed. Please try again before closing the app.');
+    } finally {
+      setToken(null);
+      setUser(null);
+    }
   }, []);
 
-  // SecureStore is native-only. The web skeleton makes no storage calls.
-  // TODO EXAM: Check platform availability before storage calls; test persistence on Android/iOS.
+  const restoreSession = useCallback(async () => {
+    setAuthLoading(true);
+    setSessionError('');
+
+    try {
+      if (!(await SecureStore.isAvailableAsync())) {
+        return;
+      }
+
+      const savedToken = await SecureStore.getItemAsync('token');
+      if (!savedToken) {
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        await logout();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Unable to restore your session. Please sign in again.');
+      }
+
+      const profile = await response.json();
+      if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+        throw new Error('The API returned an invalid profile.');
+      }
+      setToken(savedToken);
+      setUser(profile);
+    } catch (error) {
+      setToken(null);
+      setUser(null);
+      setSessionError(error instanceof Error ? error.message : 'Unable to restore your session.');
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [logout]);
+
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
+
   return (
-    <AuthContext.Provider value={{ token, user, authLoading, login, logout, restoreSession }}>
+    <AuthContext.Provider value={{ token, user, authLoading, sessionError, login, logout, restoreSession }}>
       {children}
     </AuthContext.Provider>
   );

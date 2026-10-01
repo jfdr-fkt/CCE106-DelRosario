@@ -1,21 +1,61 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- Setters are reserved for the login exercise. */
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { API_BASE_URL } from '@/constants/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SignInScreen() {
+  const router = useRouter();
+  const { login, logout, sessionError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
-    // TODO EXAM: 1. Validate email and password.
-    // TODO EXAM: 2. Set loading and clear previous errors.
-    // TODO EXAM: 3. POST to /login using fetch() and async/await.
-    // TODO EXAM: 4. Check response.ok and parse the returned JSON.
-    // TODO EXAM: 5. Pass the returned access token and user to the context login().
-    // TODO EXAM: 6. Navigate using router.replace() after successful authentication.
-    // TODO EXAM: 7. Handle login errors and stop loading in finally.
+    if (loading) {
+      return;
+    }
+    if (!email.trim() || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (API_BASE_URL === 'REPLACE_WITH_EXAM_API') {
+      setError('Please set the instructor\'s API URL in constants/api.ts.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+
+      if (!response.ok) {
+        throw new Error(response.status === 401 ? 'Incorrect email or password.' : 'Login failed. Please try again.');
+      }
+
+      const data = await response.json();
+      if (typeof data.token !== 'string' || !data.token.trim() || !data.user || typeof data.user !== 'object' || Array.isArray(data.user)) {
+        throw new Error('The login response must include a token and user.');
+      }
+
+      await login(data.token, data.user);
+      setPassword('');
+      router.replace('/(app)');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to sign in.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,7 +75,14 @@ export default function SignInScreen() {
         <Pressable accessibilityRole="button" style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Signing in…' : 'Login'}</Text>
         </Pressable>
-        <Text style={styles.note}>Exam starter: login is not implemented yet.</Text>
+        {sessionError ? (
+          <View style={styles.feedback}>
+            <Text style={styles.error}>{sessionError}</Text>
+            <Pressable accessibilityRole="button" onPress={logout}>
+              <Text style={styles.note}>Clear saved session</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </ScrollView>
   );
