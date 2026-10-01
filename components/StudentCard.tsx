@@ -1,12 +1,14 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-// TODO EXAM: Match these fields to the provided API response.
 export type Student = {
-  id?: string | number;
-  name?: string | null;
-  email?: string | null;
-  course?: string | null;
+  id: number;
+  name: string;
+  email: string;
+  username?: string;
+  phone?: string;
+  address?: { city?: string };
+  company?: { name?: string };
 };
 
 export default function StudentCard({ student }: { student: Student }) {
@@ -24,7 +26,7 @@ export default function StudentCard({ student }: { student: Student }) {
     <View style={styles.card}>
       <Text style={styles.name}>{student.name || 'Name not available'}</Text>
       <Text style={styles.text}>{student.email || 'Email not available'}</Text>
-      {student.course ? <Text style={styles.text}>{student.course}</Text> : null}
+      {student.company?.name ? <Text style={styles.text}>{student.company.name}</Text> : null}
       <Pressable accessibilityRole="button" style={styles.button} onPress={handleViewDetails} disabled={student.id === undefined || student.id === null || String(student.id).trim() === ''}>
         <Text style={styles.buttonText}>View Details</Text>
       </Pressable>

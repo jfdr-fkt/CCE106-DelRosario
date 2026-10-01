@@ -33,31 +33,31 @@ Base URL: `https://jsonplaceholder.typicode.com` (set in `constants/api.ts`)
 
 You can also set `EXPO_PUBLIC_API_URL` in a local `.env.local` file and restart Expo.
 
-POST /login
+The instructor supplied [JSONPlaceholder](https://jsonplaceholder.typicode.com/).
+It provides public `/users` records, but does not provide the starter's
+`POST /login`, `GET /students`, `GET /students/{id}`, or `GET /profile` endpoints.
+The app uses these working endpoints instead:
 
-GET /students
+| Feature | Request |
+| --- | --- |
+| Demo login | `GET /users`, then find the entered email |
+| Student list | `GET /users` |
+| Student details | `GET /users/{id}` |
+| Profile and session restoration | `GET /users/{signed-in user id}` |
 
-GET /students/{id}
+Records come from the supplied API. The screens display its name, email,
+username, phone, city, and company fields. No course or role data is invented.
 
-GET /profile
+### Demo Login
 
-Use the instructor's API documentation for payloads and response fields.
+Use `Sincere@april.biz` with any non-empty demo password. Other emails returned
+by `/users` also work, and email matching is case-insensitive.
 
-The instructor's latest update supplies JSONPlaceholder as the base URL. Its
-[documented resources](https://jsonplaceholder.typicode.com/) include `/users`,
-but not `/login`, `/students`, or `/profile`. Checks of the exam's student and
-profile endpoints return HTTP 404. JSONPlaceholder does not issue login tokens.
-The instructor still needs to clarify how authentication and student endpoints
-should work with this service. The current code expects these response shapes:
-
-- `POST /login`: send `{ "email": "...", "password": "..." }`; receive
-  `{ "token": "...", "user": { "id": 1, "name": "...", "email": "...", "role": "..." } }`.
-- `GET /students`: receive an array of students with `id`, `name`, `email`, and `course`.
-- `GET /students/{id}`: receive one student object, or HTTP 404 when not found.
-- `GET /profile`: receive a user object with `id`, `name`, `email`, and `role`.
-
-The GET requests send `Authorization: Bearer TOKEN`. HTTP 401 or 403 signs the
-user out. No sample records or hardcoded credentials are used by the app.
+JSONPlaceholder cannot verify passwords or issue authentication tokens. The
+app therefore generates a random local session ID with Expo Crypto. This is
+a demo session, not server authentication. Passwords are neither saved nor
+sent to JSONPlaceholder. The demo session ID is not sent as an API credential.
+The original server-authentication endpoints remain unsupported by this service.
 
 ### How to Run
 
@@ -74,15 +74,17 @@ list supports searching by name, and View Details opens the selected student's
 dynamic route. API screens show loading, error, and empty states, with a retry
 button for errors. Logout returns to Sign In.
 
-The remaining `TODO EXAM` comments identify response-field confirmation. The
-base URL is now set, but login and student loading still need the instructor's
-endpoint and authentication guidance.
+The remaining `TODO EXAM` in `constants/api.ts` records the original endpoint
+requirements, which JSONPlaceholder cannot satisfy. The implemented demo uses
+the endpoint mapping above.
 
 Expo SecureStore is used only in `context/AuthContext.tsx`. The app checks
-availability before saving, reading, or deleting a token. Android/iOS sessions
-are restored on startup by validating the saved token with `GET /profile`.
-Passwords are never saved. Web sessions stay in memory and end on refresh.
-Verify secure session persistence on Android/iOS with the instructor's API.
+availability before saving, reading, or deleting a session. Android/iOS sessions
+store the session ID, user ID, and expiry together. On startup, the app checks
+the saved expiry and fetches the user from `/users/{id}`. Saved sessions expire
+after 24 hours. Invalid sessions and deleted users are signed out. Passwords
+are never saved. Web sessions stay in memory and end on refresh.
+SecureStore persistence still needs to be verified on a physical Android/iOS device.
 See the [Expo SDK 54 SecureStore documentation](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/).
 
 Compiler and lint checks:

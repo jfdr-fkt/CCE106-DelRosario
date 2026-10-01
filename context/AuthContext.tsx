@@ -1,12 +1,14 @@
 import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import { API_BASE_URL } from '@/constants/api';
 
 export type User = {
-  id?: string | number;
-  name?: string;
-  email?: string;
-  role?: string;
+  id: number;
+  name: string;
+  email: string;
+  username?: string;
+  phone?: string;
 };
 
 type AuthContextValue = {
@@ -14,7 +16,7 @@ type AuthContextValue = {
   user: User | null;
   authLoading: boolean;
   sessionError: string;
-  login: (accessToken: string, userData: User) => Promise<void>;
+  login: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
 };
@@ -27,14 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [sessionError, setSessionError] = useState('');
 
-  const login = async (accessToken: string, userData: User) => {
+  const login = async (userData: User) => {
     setSessionError('');
 
     try {
+      const session = {
+        token: Crypto.randomUUID(),
+        userId: userData.id,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      };
       if (await SecureStore.isAvailableAsync()) {
-        await SecureStore.setItemAsync('token', accessToken);
+        await SecureStore.setItemAsync('session', JSON.stringify(session));
       }
-      setToken(accessToken);
+      setToken(session.token);
       setUser(userData);
     } catch {
       throw new Error('Unable to save your session. Please try again.');
@@ -46,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       if (await SecureStore.isAvailableAsync()) {
+        await SecureStore.deleteItemAsync('session');
         await SecureStore.deleteItemAsync('token');
       }
     } catch {
@@ -65,16 +73,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const savedToken = await SecureStore.getItemAsync('token');
-      if (!savedToken) {
+      const savedSession = await SecureStore.getItemAsync('session');
+      if (!savedSession) {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/profile`, {
-        headers: { Authorization: `Bearer ${savedToken}` },
-      });
+      let session;
+      try {
+        session = JSON.parse(savedSession);
+      } catch {
+        await logout();
+        return;
+      }
 
-      if (response.status === 401 || response.status === 403) {
+      if (!session || typeof session.token !== 'string' || !session.token.trim() ||
+          !Number.isInteger(session.userId) || session.userId < 1 ||
+          typeof session.expiresAt !== 'number' || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
+        await logout();
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/${session.userId}`);
+
+      if (response.status === 401 || response.status === 403 || response.status === 404) {
         await logout();
         return;
       }
@@ -83,10 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const profile = await response.json();
-      if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+      if (!profile || profile.id !== session.userId || typeof profile.name !== 'string' || typeof profile.email !== 'string') {
         throw new Error('The API returned an invalid profile.');
       }
-      setToken(savedToken);
+      setToken(session.token);
       setUser(profile);
     } catch (error) {
       setToken(null);

@@ -23,13 +23,11 @@ export default function StudentDetailsScreen() {
       setStudent(null);
 
       try {
-        if (typeof id !== 'string' || !id.trim()) {
+        if (typeof id !== 'string' || !/^[1-9]\d*$/.test(id)) {
           throw new Error('Invalid student ID.');
         }
 
-        const response = await fetch(`${API_BASE_URL}/students/${encodeURIComponent(id)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(id)}`);
         if (!active) {
           return;
         }
@@ -45,7 +43,7 @@ export default function StudentDetailsScreen() {
         }
 
         const data = response.status === 204 ? null : await response.json();
-        if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
+        if (data !== null && (data.id !== Number(id) || typeof data.name !== 'string' || typeof data.email !== 'string')) {
           throw new Error('The API returned an invalid student record.');
         }
         if (active) {
@@ -84,7 +82,10 @@ export default function StudentDetailsScreen() {
           <Text style={styles.text}>ID: {student.id ?? id}</Text>
           <Text style={styles.text}>Name: {student.name || 'Not available'}</Text>
           <Text style={styles.text}>Email: {student.email || 'Not available'}</Text>
-          <Text style={styles.text}>Course: {student.course || 'Not available'}</Text>
+          <Text style={styles.text}>Username: {student.username || 'Not available'}</Text>
+          <Text style={styles.text}>Phone: {student.phone || 'Not available'}</Text>
+          <Text style={styles.text}>City: {student.address?.city || 'Not available'}</Text>
+          <Text style={styles.text}>Company: {student.company?.name || 'Not available'}</Text>
         </View>
       ) : null}
       <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)/students')}><Text style={styles.buttonText}>Back</Text></Pressable>

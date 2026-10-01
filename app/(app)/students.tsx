@@ -20,9 +20,7 @@ export default function StudentsScreen() {
       setError('');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/students`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(`${API_BASE_URL}/users`);
         if (!active) {
           return;
         }
@@ -35,7 +33,9 @@ export default function StudentsScreen() {
         }
 
         const data = await response.json();
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(data) || data.some((item) =>
+          !item || !Number.isInteger(item.id) || typeof item.name !== 'string' || typeof item.email !== 'string'
+        )) {
           throw new Error('The API must return a student array.');
         }
         if (active) {

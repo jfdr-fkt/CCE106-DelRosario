@@ -5,7 +5,8 @@ import { API_BASE_URL } from '@/constants/api';
 import { type User } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
-  const { token, logout } = useAuth();
+  const { token, user, logout } = useAuth();
+  const userId = user?.id;
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,13 +21,11 @@ export default function ProfileScreen() {
       setError('');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(`${API_BASE_URL}/users/${userId}`);
         if (!active) {
           return;
         }
-        if (response.status === 401 || response.status === 403) {
+        if (response.status === 401 || response.status === 403 || response.status === 404) {
           await logout();
           return;
         }
@@ -35,7 +34,7 @@ export default function ProfileScreen() {
         }
 
         const data = response.status === 204 ? null : await response.json();
-        if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
+        if (data !== null && (data.id !== userId || typeof data.name !== 'string' || typeof data.email !== 'string')) {
           throw new Error('The API returned an invalid profile.');
         }
         if (active) {
@@ -56,7 +55,7 @@ export default function ProfileScreen() {
     return () => {
       active = false;
     };
-  }, [token, logout, retry]);
+  }, [userId, logout, retry]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -77,10 +76,11 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <Text style={styles.text}>Name: {profile.name || 'Not available'}</Text>
             <Text style={styles.text}>Email: {profile.email || 'Not available'}</Text>
-            <Text style={styles.text}>Role: {profile.role || 'Not available'}</Text>
+            <Text style={styles.text}>Username: {profile.username || 'Not available'}</Text>
+            <Text style={styles.text}>Phone: {profile.phone || 'Not available'}</Text>
           </View>
         ) : <Text style={styles.text}>No profile found.</Text>}
-      <Text style={styles.text}>Session Status: {token ? 'Authenticated' : 'Not Available'}</Text>
+      <Text style={styles.text}>Session Status: {token ? 'Demo session active' : 'Not Available'}</Text>
       <Pressable accessibilityRole="button" style={styles.button} onPress={handleLogout} disabled={loggingOut}><Text style={styles.buttonText}>{loggingOut ? 'Signing out...' : 'LOGOUT'}</Text></Pressable>
     </ScrollView>
   );

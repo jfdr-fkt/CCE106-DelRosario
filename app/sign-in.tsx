@@ -16,7 +16,7 @@ export default function SignInScreen() {
     if (loading) {
       return;
     }
-    if (!email.trim() || !password) {
+    if (!email.trim() || !password.trim()) {
       setError('Please enter your email and password.');
       return;
     }
@@ -33,22 +33,25 @@ export default function SignInScreen() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
+      const response = await fetch(`${API_BASE_URL}/users`);
 
       if (!response.ok) {
-        throw new Error(response.status === 401 ? 'Incorrect email or password.' : 'Login failed. Please try again.');
+        throw new Error('Unable to load demo accounts. Please try again.');
       }
 
       const data = await response.json();
-      if (typeof data.token !== 'string' || !data.token.trim() || !data.user || typeof data.user !== 'object' || Array.isArray(data.user)) {
-        throw new Error('The login response must include a token and user.');
+      if (!Array.isArray(data)) {
+        throw new Error('The API returned an invalid account list.');
       }
 
-      await login(data.token, data.user);
+      const account = data.find((item) =>
+        typeof item?.email === 'string' && item.email.toLowerCase() === email.trim().toLowerCase()
+      );
+      if (!account || !Number.isInteger(account.id) || account.id < 1 || typeof account.name !== 'string') {
+        throw new Error('No demo account found for that email. Try Sincere@april.biz.');
+      }
+
+      await login(account);
       setPassword('');
       router.replace('/(app)');
     } catch (error) {
@@ -64,10 +67,11 @@ export default function SignInScreen() {
         <Text style={styles.eyebrow}>CCE106 • PRACTICAL EXAMINATION</Text>
         <Text style={styles.title}>Student Service Portal</Text>
         <Text style={styles.subtitle}>Sign in to access student services.</Text>
+        <Text style={styles.demo}>Demo login: use Sincere@april.biz and any non-empty demo password. Passwords are not verified.</Text>
         <Text style={styles.label}>Email</Text>
-        <TextInput style={styles.input} accessibilityLabel="Email" placeholder="student@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
-        <Text style={styles.label}>Password</Text>
-        <TextInput style={styles.input} accessibilityLabel="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry />
+        <TextInput style={styles.input} accessibilityLabel="Email" placeholder="Sincere@april.biz" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+        <Text style={styles.label}>Demo Password</Text>
+        <TextInput style={styles.input} accessibilityLabel="Password" placeholder="Enter any demo password" value={password} onChangeText={setPassword} secureTextEntry />
         <View style={styles.feedback} accessibilityLiveRegion="polite">
           {loading && <ActivityIndicator color="#245bb2" accessibilityLabel="Signing in" />}
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -94,6 +98,7 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 11, fontWeight: '700', color: '#245bb2', marginBottom: 12 },
   title: { fontSize: 28, fontWeight: '700', color: '#17324d' },
   subtitle: { color: '#536579', marginTop: 8, marginBottom: 24 },
+  demo: { color: '#536579', marginBottom: 20, lineHeight: 20 },
   label: { color: '#17324d', fontWeight: '600', marginBottom: 8 },
   input: { borderWidth: 1, borderColor: '#c6d2e1', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 16, color: '#17324d' },
   feedback: { minHeight: 28 },
