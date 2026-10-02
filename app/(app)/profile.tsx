@@ -21,7 +21,9 @@ export default function ProfileScreen() {
       setError('');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!active) {
           return;
         }
@@ -55,7 +57,7 @@ export default function ProfileScreen() {
     return () => {
       active = false;
     };
-  }, [userId, logout, retry]);
+  }, [userId, token, logout, retry]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -77,10 +79,9 @@ export default function ProfileScreen() {
             <Text style={styles.text}>Name: {profile.name || 'Not available'}</Text>
             <Text style={styles.text}>Email: {profile.email || 'Not available'}</Text>
             <Text style={styles.text}>Username: {profile.username || 'Not available'}</Text>
-            <Text style={styles.text}>Phone: {profile.phone || 'Not available'}</Text>
           </View>
         ) : <Text style={styles.text}>No profile found.</Text>}
-      <Text style={styles.text}>Session Status: {token ? 'Demo session active' : 'Not Available'}</Text>
+      <Text style={styles.text}>Session Status: {token ? 'Authenticated' : 'Not Available'}</Text>
       <Pressable accessibilityRole="button" style={styles.button} onPress={handleLogout} disabled={loggingOut}><Text style={styles.buttonText}>{loggingOut ? 'Signing out...' : 'LOGOUT'}</Text></Pressable>
     </ScrollView>
   );

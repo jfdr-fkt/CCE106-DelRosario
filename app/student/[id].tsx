@@ -27,7 +27,9 @@ export default function StudentDetailsScreen() {
           throw new Error('Invalid student ID.');
         }
 
-        const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(id)}`);
+        const response = await fetch(`${API_BASE_URL}/students/${encodeURIComponent(id)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!active) {
           return;
         }

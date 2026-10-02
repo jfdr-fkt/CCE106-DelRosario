@@ -16,7 +16,7 @@ export default function DashboardScreen() {
       </View>
       <View style={styles.card}>
         <Text style={styles.heading}>Session Status</Text>
-        <Text style={styles.subtitle}>{token ? 'Demo session active' : 'Not Available'}</Text>
+        <Text style={styles.subtitle}>{token ? 'Authenticated' : 'Not Available'}</Text>
       </View>
     </ScrollView>
   );

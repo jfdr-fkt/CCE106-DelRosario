@@ -1,6 +1,5 @@
-import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
 import { API_BASE_URL } from '@/constants/api';
 
 export type User = {
@@ -16,7 +15,7 @@ type AuthContextValue = {
   user: User | null;
   authLoading: boolean;
   sessionError: string;
-  login: (userData: User) => Promise<void>;
+  login: (sessionToken: string, userData: User, expiresAt: number) => Promise<void>;
   logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
 };
@@ -28,20 +27,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [sessionError, setSessionError] = useState('');
+  const currentToken = useRef<string | null>(null);
 
-  const login = async (userData: User) => {
+  const login = async (sessionToken: string, userData: User, expiresAt: number) => {
     setSessionError('');
 
     try {
       const session = {
-        token: Crypto.randomUUID(),
+        token: sessionToken,
         userId: userData.id,
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        expiresAt,
       };
       if (await SecureStore.isAvailableAsync()) {
         await SecureStore.setItemAsync('session', JSON.stringify(session));
       }
       setToken(session.token);
+      currentToken.current = session.token;
       setUser(userData);
     } catch {
       throw new Error('Unable to save your session. Please try again.');
@@ -50,6 +51,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     setSessionError('');
+
+    const sessionToken = currentToken.current;
+    if (sessionToken) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        await fetch(`${API_BASE_URL}/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${sessionToken}` },
+          signal: controller.signal,
+        });
+      } catch {
+        setSessionError('Signed out locally. The server session will expire automatically.');
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
 
     try {
       if (await SecureStore.isAvailableAsync()) {
@@ -60,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionError('Signed out, but the saved session could not be removed. Please try again before closing the app.');
     } finally {
       setToken(null);
+      currentToken.current = null;
       setUser(null);
     }
   }, []);
@@ -93,7 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/users/${session.userId}`);
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
 
       if (response.status === 401 || response.status === 403 || response.status === 404) {
         await logout();
@@ -108,9 +129,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('The API returned an invalid profile.');
       }
       setToken(session.token);
+      currentToken.current = session.token;
       setUser(profile);
     } catch (error) {
       setToken(null);
+      currentToken.current = null;
       setUser(null);
       setSessionError(error instanceof Error ? error.message : 'Unable to restore your session.');
     } finally {
