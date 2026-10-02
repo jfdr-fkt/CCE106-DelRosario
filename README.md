@@ -8,104 +8,140 @@ Name:
 
 Section:
 
-Date:
+Date: October 2, 2026
 
 ### Required Features
 
-- [ ] Login
-- [ ] Authentication state
-- [ ] Secure token storage
-- [ ] Protected navigation
-- [ ] Dashboard
-- [ ] Student API request
-- [ ] Loading state
-- [ ] Error state
-- [ ] Empty state
-- [ ] Search/filter
-- [ ] Dynamic student details
-- [ ] Profile
-- [ ] Session restoration
-- [ ] Logout
-
-### API
-
-Base URL: `https://jsonplaceholder.typicode.com` (set in `constants/api.ts`)
-
-You can also set `EXPO_PUBLIC_API_URL` in a local `.env.local` file and restart Expo.
-
-The instructor supplied [JSONPlaceholder](https://jsonplaceholder.typicode.com/).
-It provides public `/users` records, but does not provide the starter's
-`POST /login`, `GET /students`, `GET /students/{id}`, or `GET /profile` endpoints.
-The app uses these working endpoints instead:
-
-| Feature | Request |
-| --- | --- |
-| Demo login | `GET /users`, then find the entered email |
-| Student list | `GET /users` |
-| Student details | `GET /users/{id}` |
-| Profile and session restoration | `GET /users/{signed-in user id}` |
-
-Records come from the supplied API. The screens display its name, email,
-username, phone, city, and company fields. No course or role data is invented.
-
-### Demo Login
-
-Use `Sincere@april.biz` with any non-empty demo password. Other emails returned
-by `/users` also work, and email matching is case-insensitive.
-
-JSONPlaceholder cannot verify passwords or issue authentication tokens. The
-app therefore generates a random local session ID with Expo Crypto. This is
-a demo session, not server authentication. Passwords are neither saved nor
-sent to JSONPlaceholder. The demo session ID is not sent as an API credential.
-The original server-authentication endpoints remain unsupported by this service.
+- [x] Login
+- [x] Authentication state
+- [x] Secure token storage
+- [x] Protected navigation
+- [x] Dashboard
+- [x] Student API request
+- [x] Loading state
+- [x] Error state
+- [x] Empty state
+- [x] Search/filter
+- [x] Dynamic student details
+- [x] Profile
+- [x] Session restoration
+- [x] Logout
 
 ### How to Run
 
+Use Node.js 20.19 or newer. Install dependencies in the project folder:
+
 ```sh
 npm install
+```
+
+Start the local API in the first terminal:
+
+```sh
+npm run api
+```
+
+Keep it open. Start Expo in a second terminal:
+
+```sh
 npx expo start
 ```
 
-Press `w` for web, or run `npm run web` directly.
+Press `w` for web, or scan the QR code with Expo Go for SDK 54.
 
-The app opens Sign In. After login, it displays the dashboard, students, and profile.
-Both the application tabs and `/student/{id}` require authentication. The student
-list supports searching by name, and View Details opens the selected student's
-dynamic route. API screens show loading, error, and empty states, with a retry
-button for errors. Logout returns to Sign In.
+Test account:
 
-The remaining `TODO EXAM` in `constants/api.ts` records the original endpoint
-requirements, which JSONPlaceholder cannot satisfy. The implemented demo uses
-the endpoint mapping above.
+- Email: `student@example.com`
+- Password: `Student123!`
 
-Expo SecureStore is used only in `context/AuthContext.tsx`. The app checks
-availability before saving, reading, or deleting a session. Android/iOS sessions
-store the session ID, user ID, and expiry together. On startup, the app checks
-the saved expiry and fetches the user from `/users/{id}`. Saved sessions expire
-after 24 hours. Invalid sessions and deleted users are signed out. Passwords
-are never saved. Web sessions stay in memory and end on refresh.
-SecureStore persistence still needs to be verified on a physical Android/iOS device.
+This is a public test account for the examination. The server stores its bcrypt
+password hash in `server/account.json` and verifies the password during login.
+Incorrect passwords are rejected. Passwords are not saved in the app.
+
+### Expo Go on a Phone
+
+Keep the computer and phone on the same Wi-Fi. Start Expo using its default LAN
+connection. The app reads Expo's computer address and uses port 3000 for the API.
+On web, it uses the current browser hostname. Allow the Node.js server through
+the computer's firewall if the phone cannot connect.
+
+If the automatic address does not work, create `.env.local` in the project folder:
+
+```sh
+EXPO_PUBLIC_API_URL=http://192.168.1.5:3000
+```
+
+Replace the example address with your computer's Wi-Fi IPv4 address from
+`ipconfig`, then restart Expo. The phone must be able to reach this address.
+An Expo tunnel does not expose the separate API server. This project uses a
+local development API; it is not deployed online.
+
+### API
+
+The instructor's supplied base URL is `https://jsonplaceholder.typicode.com`.
+It provides `/users`, but does not implement the starter's login, student, or
+profile endpoints. This project adds its own local API to supply those endpoints.
+It is a student implementation, not an instructor-provided authentication service.
+
+The app's API address is set in `constants/api.ts`. The local server implements:
+
+| Request | Response |
+| --- | --- |
+| `POST /login` | `{ token, expiresAt, user }` |
+| `GET /students` | Array from JSONPlaceholder `/users` |
+| `GET /students/{id}` | Record from JSONPlaceholder `/users/{id}` |
+| `GET /profile` | Signed-in test account's public profile |
+| `POST /logout` | Invalidates the token and returns HTTP 204 |
+
+Login accepts `{ email, password }`. Other endpoints require
+`Authorization: Bearer <token>`. Missing, expired, or invalid tokens return HTTP 401.
+The server creates a random token for each successful login; tokens are not hardcoded.
+Responses never include password hashes.
+
+Student records are fetched from the supplied API for every request. No student
+records are manually entered or used as a fallback. Screens display the fields
+that JSONPlaceholder supplies, including username, phone, city, and company.
+The profile represents the local login account, separately from the student list.
+
+### Sessions and Navigation
+
+The application tabs and dynamic `/student/{id}` route require authentication.
+Student screens include loading, error, empty, search, and retry states.
+Logout returns to Sign In and removes the saved session.
+
+Native sessions save the token, user ID, and expiry together using Expo SecureStore.
+On startup, the app checks expiry and requests `/profile` with the saved token.
+Invalid sessions are cleared. SecureStore availability is checked before use.
+Web sessions stay in memory and end on refresh.
+
+Tokens expire after two hours. The server keeps sessions in memory, so restarting
+the API invalidates existing sessions and users must sign in again. Keep the API
+running when checking session restoration. If logout cannot reach the API, the
+app signs out locally and the server token expires automatically.
+
+Physical Android/iOS SecureStore persistence still needs to be checked on a device.
 See the [Expo SDK 54 SecureStore documentation](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/).
+The remaining `TODO EXAM` records that the instructor did not supply authentication
+payload documentation; the local server's payloads are documented above.
 
-Compiler and lint checks:
+### Checks
 
 ```sh
 npx tsc --noEmit
 npm run lint
+npm run test:api
 ```
 
 ### Required Git Commits
 
-Students must create at least five meaningful commits.
-
-Suggested examples:
-
-- `exam: setup navigation`
-- `exam: implement login`
-- `exam: integrate student api`
-- `exam: add dynamic student details`
-- `exam: implement session and logout`
+The `2ndLabExam` branch contains more than five meaningful commits covering
+navigation, login, students, details, profile, sessions, and API setup.
 
 ### Submission
 
-Submit the GitHub repository URL according to the instructor's instructions.
+Repository: https://github.com/jfdr-fkt/CCE106-DelRosario
+
+Exam branch: https://github.com/jfdr-fkt/CCE106-DelRosario/tree/2ndLabExam
+
+Submit the repository URL according to the instructor's instructions and identify
+`2ndLabExam` as the examination branch.
