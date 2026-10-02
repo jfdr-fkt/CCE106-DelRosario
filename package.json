@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "api": "node server/index.js",
+    "test:api": "node --test tests/api.test.js",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -41,9 +43,12 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
     "eslint": "^9.25.0",
-    "eslint-config-expo": "~10.0.0"
+    "eslint-config-expo": "~10.0.0",
+    "express": "^5.2.1",
+    "typescript": "~5.9.2"
   },
   "private": true
 }

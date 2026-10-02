@@ -1,0 +1,7 @@
+{
+  "id": 1,
+  "name": "Exam Student",
+  "email": "student@example.com",
+  "username": "student",
+  "passwordHash": "$2b$10$XU4YVrXF46dt5VLxglK.0O145Kb2c3xqpfaVDsSaM3/rlS1UnNaNy"
+}
