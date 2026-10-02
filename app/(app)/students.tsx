@@ -66,28 +66,33 @@ export default function StudentsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Students</Text>
-      <TextInput style={styles.input} accessibilityLabel="Search students" placeholder="Search by name" value={search} onChangeText={setSearch} />
-      {loading ? (
-        <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading students...</Text></View>
-      ) : error ? (
-        <View style={styles.state} accessibilityLiveRegion="polite"><Text style={styles.error}>{error}</Text><Pressable accessibilityRole="button" onPress={() => setRetry(retry + 1)}><Text style={styles.link}>Try Again</Text></Pressable></View>
-      ) : (
-        <FlatList
-          data={filteredStudents}
-          keyExtractor={(item, index) => String(item.id ?? index)}
-          renderItem={({ item }) => <StudentCard student={item} />}
-          ListEmptyComponent={<View style={styles.state}><Text style={styles.text}>No students found.</Text></View>}
-        />
-      )}
+      <View style={styles.content}>
+        <Text style={styles.title}>Students</Text>
+        <Text style={styles.subtitle}>Browse the directory and find a student.</Text>
+        <TextInput style={styles.input} accessibilityLabel="Search students" placeholder="Search by name" value={search} onChangeText={setSearch} />
+        {loading ? (
+          <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading students...</Text></View>
+        ) : error ? (
+          <View style={styles.state} accessibilityLiveRegion="polite"><Text style={styles.error}>{error}</Text><Pressable accessibilityRole="button" onPress={() => setRetry(retry + 1)}><Text style={styles.link}>Try Again</Text></Pressable></View>
+        ) : (
+          <FlatList
+            data={filteredStudents}
+            keyExtractor={(item, index) => String(item.id ?? index)}
+            renderItem={({ item }) => <StudentCard student={item} />}
+            ListEmptyComponent={<View style={styles.state}><Text style={styles.text}>No students found.</Text></View>}
+          />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#f2f5fa' },
-  title: { fontSize: 28, fontWeight: '700', color: '#17324d', marginBottom: 20 },
-  input: { padding: 14, borderWidth: 1, borderColor: '#c6d2e1', borderRadius: 8, backgroundColor: '#ffffff', color: '#17324d', marginBottom: 20 },
+  container: { flex: 1, padding: 20, backgroundColor: '#f2f5fa' },
+  content: { flex: 1, width: '100%', maxWidth: 960, alignSelf: 'center' },
+  title: { fontSize: 28, fontWeight: '700', color: '#17324d', marginBottom: 8 },
+  subtitle: { color: '#536579', fontSize: 14, marginBottom: 24, lineHeight: 22 },
+  input: { padding: 16, borderWidth: 1, borderColor: '#d4deeb', borderRadius: 12, backgroundColor: '#ffffff', color: '#17324d', marginBottom: 20 },
   state: { padding: 24, gap: 12, alignItems: 'center' },
   text: { color: '#536579' },
   note: { color: '#536579', fontSize: 12 },

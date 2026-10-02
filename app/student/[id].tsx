@@ -70,38 +70,41 @@ export default function StudentDetailsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Student Details</Text>
-      {loading ? <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading student…</Text></View>
-        : error ? (
-          <View style={styles.state}>
-            <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>
-            <Pressable accessibilityRole="button" onPress={() => setRetry(retry + 1)}><Text style={styles.text}>Try Again</Text></Pressable>
+      <View style={styles.content}>
+        <Text style={styles.title}>Student Details</Text>
+        {loading ? <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading student…</Text></View>
+          : error ? (
+            <View style={styles.state}>
+              <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>
+              <Pressable accessibilityRole="button" onPress={() => setRetry(retry + 1)}><Text style={styles.text}>Try Again</Text></Pressable>
+            </View>
+          )
+          : !student ? <Text style={styles.text}>No student record available.</Text> : null}
+        {!loading && !error && student ? (
+          <View style={styles.card}>
+            <Text style={styles.text}>ID: {student.id ?? id}</Text>
+            <Text style={styles.text}>Name: {student.name || 'Not available'}</Text>
+            <Text style={styles.text}>Email: {student.email || 'Not available'}</Text>
+            <Text style={styles.text}>Username: {student.username || 'Not available'}</Text>
+            <Text style={styles.text}>Phone: {student.phone || 'Not available'}</Text>
+            <Text style={styles.text}>City: {student.address?.city || 'Not available'}</Text>
+            <Text style={styles.text}>Company: {student.company?.name || 'Not available'}</Text>
           </View>
-        )
-        : !student ? <Text style={styles.text}>No student record available.</Text> : null}
-      {!loading && !error && student ? (
-        <View style={styles.card}>
-          <Text style={styles.text}>ID: {student.id ?? id}</Text>
-          <Text style={styles.text}>Name: {student.name || 'Not available'}</Text>
-          <Text style={styles.text}>Email: {student.email || 'Not available'}</Text>
-          <Text style={styles.text}>Username: {student.username || 'Not available'}</Text>
-          <Text style={styles.text}>Phone: {student.phone || 'Not available'}</Text>
-          <Text style={styles.text}>City: {student.address?.city || 'Not available'}</Text>
-          <Text style={styles.text}>Company: {student.company?.name || 'Not available'}</Text>
-        </View>
-      ) : null}
-      <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)/students')}><Text style={styles.buttonText}>Back</Text></Pressable>
+        ) : null}
+        <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)/students')}><Text style={styles.buttonText}>Back</Text></Pressable>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 24, gap: 20, backgroundColor: '#f2f5fa' },
+  container: { flexGrow: 1, padding: 20, backgroundColor: '#f2f5fa' },
+  content: { width: '100%', maxWidth: 680, alignSelf: 'center', gap: 20 },
   title: { color: '#17324d', fontSize: 28, fontWeight: '700' },
   state: { gap: 12, alignItems: 'center' },
-  card: { backgroundColor: '#ffffff', padding: 20, gap: 16, borderRadius: 12 },
+  card: { backgroundColor: '#ffffff', padding: 24, gap: 20, borderRadius: 16, borderWidth: 1, borderColor: '#e1e7ef' },
   text: { color: '#536579', fontSize: 16 },
   error: { color: '#b42318' },
-  button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8, alignItems: 'center' },
+  button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 12, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontWeight: '600' },
 });

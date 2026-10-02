@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { API_BASE_URL } from '@/constants/api';
 import { useAuth } from '@/hooks/useAuth';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function SignInScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.card}>
+        <View style={styles.brandIcon}><Ionicons name="school-outline" size={32} color="#ffffff" /></View>
         <Text style={styles.eyebrow}>CCE106 • PRACTICAL EXAMINATION</Text>
         <Text style={styles.title}>Student Service Portal</Text>
         <Text style={styles.subtitle}>Sign in to access student services.</Text>
@@ -90,15 +92,16 @@ export default function SignInScreen() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, backgroundColor: '#f2f5fa' },
-  card: { width: '100%', maxWidth: 440, alignSelf: 'center', padding: 24, borderRadius: 16, backgroundColor: '#ffffff' },
+  card: { width: '100%', maxWidth: 440, alignSelf: 'center', padding: 28, borderRadius: 20, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e1e7ef' },
+  brandIcon: { padding: 16, backgroundColor: '#245bb2', borderRadius: 16, alignSelf: 'flex-start', marginBottom: 24 },
   eyebrow: { fontSize: 11, fontWeight: '700', color: '#245bb2', marginBottom: 12 },
   title: { fontSize: 28, fontWeight: '700', color: '#17324d' },
   subtitle: { color: '#536579', marginTop: 8, marginBottom: 24 },
   label: { color: '#17324d', fontWeight: '600', marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: '#c6d2e1', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 16, color: '#17324d' },
+  input: { borderWidth: 1, borderColor: '#d4deeb', borderRadius: 12, padding: 14, fontSize: 16, marginBottom: 16, color: '#17324d', backgroundColor: '#fafbfd' },
   feedback: { minHeight: 28 },
   error: { color: '#b42318' },
-  button: { backgroundColor: '#245bb2', padding: 15, borderRadius: 8, alignItems: 'center' },
+  button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 12, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontWeight: '700' },
   note: { color: '#536579', fontSize: 12, marginTop: 20 },
 });
